@@ -1,0 +1,49 @@
+### How to get Dynamic Repository and Branch names from git repos. ###
+
+Active Choice plugin and Extensible choice parameter plugin for dynamic repo and branch selections
+Extensible choice parameter plugin for branch selection for a default repo.
+
+Steps:-
+1. Add an extensible choice parameter to your job
+2. select System Groovy Choice parameter in Choice parameter field
+3. Place the following script in Groovy script text box and replace the place holders “< >” with required values.
+ #################################### 
+  import groovy.json.JsonSlurper;
+try{
+   List<String>params = new ArrayList<String>()
+   URL apiUrl = "https://api.github.com/users/<repo-owner>/repos?access_token=<github-access-token>".toURL()
+   List branches = new JsonSlurper().parse(apiUrl.newReader())
+   for (branch in branches ) { 
+     params.add(branch.name) 
+   }
+   return params
+}
+catch(IOException ex){
+   print ex
+}
+####################################
+Note:- Get github-access-token from this url https://github.com/settings/tokens.
+Also you will get some access denied issues while testing groovy code, for that you need to approve scripts execution from "https://JENKINS_URL:8080/scriptApproval/"
+
+4. Add an active choice reactive parameter to your job
+5. Place Reference Parameter as repository and following script in Groovy Script text box
+  ##################################
+  import groovy.json.JsonSlurper;
+try{
+   List<String>params = new ArrayList<String>()
+   URL apiUrl = "https://api.github.com/repos/<repo-owner>/$repository/branches?access_token=<github-access-token>".toURL()
+   List json = new JsonSlurper().parse(apiUrl.newReader())
+   for (repo in json ) { 
+   params.add(repo.name) 
+  }
+return params
+}
+catch(IOException ex){
+   print ex
+}
+####################################
+Note:-
+$repository takes dynamic value from repository extensive choice parameter.
+
+Now try to build. The parameters values will be dynamic. 
+
